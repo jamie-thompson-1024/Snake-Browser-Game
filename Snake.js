@@ -8,8 +8,9 @@ class Snake extends EventTarget
     g;
 
     // game options / render params
+    gameBaseSpeed = 500;
     gameSpeed = 1.0; 
-    gameWidth = 25;
+    gameWidth = 50;
     gameHeight;
     gameSquareSize;
     boardWidth;
@@ -22,21 +23,23 @@ class Snake extends EventTarget
     // game data
     moveDir = 'up'; // 'up' | 'down' | 'left' | 'right'
     moveDirSet = false; // stop dir selection till next update
-    playerX = 0;
-    playerY = 0;
-    foodX = 0;
-    foodY = 0;
+    headPos = [0,0];
+    tailPos = [];
+    foodPos = [0,0];
     score = 0;
 
     // game state
     gameStarted = false;
 
-    // render styles ( computer from container styles )
+    // render styles ( computer from container styles or preset )
     backgroundColor;
     borderColor;
     scoreBarHeight;
     fontSize;
     font;
+    fontColor = '#EEEEEE';
+    playerColor = '#EEEEEE';
+    foodColor = '#FF1111';
 
     constructor(container, options)
     {
@@ -75,6 +78,20 @@ class Snake extends EventTarget
     start(options)
     {
         this.gameStarted = true;
+
+        // get user options
+        this.gameSpeed = options?.gameSpeed ?? this.gameSpeed;
+        this.gameWidth = options?.gameWidth ?? this.gameWidth;
+        this.resize();
+
+        // reset game
+        this.headPos = [
+            Math.floor(this.gameWidth / 2),
+            Math.floor(this.gameHeight / 2)
+        ];
+        this.tailPos = [];
+
+        this.update();
     }
 
     stop()
@@ -90,19 +107,19 @@ class Snake extends EventTarget
             switch(ev.code)
             {
                 case 'KeyW':
-                    this.moveDir = 'up';
+                    this.moveDir = this.moveDir !== 'down' ? 'up' : this.moveDir;
                     this.moveDirSet = true;
                     break;
                 case 'KeyA':
-                    this.moveDir = 'left';
+                    this.moveDir = this.moveDir !== 'right' ? 'left' : this.moveDir;
                     this.moveDirSet = true;
                     break;
                 case 'KeyS':
-                    this.moveDir = 'down';
+                    this.moveDir = this.moveDir !== 'up' ? 'down' : this.moveDir;
                     this.moveDirSet = true;
                     break;
                 case 'KeyD':
-                    this.moveDir = 'right';
+                    this.moveDir = this.moveDir !== 'left' ? 'right' : this.moveDir;
                     this.moveDirSet = true;
                     break;
                 case 'Escape': // end game on 'Escape' key press
@@ -115,39 +132,97 @@ class Snake extends EventTarget
     update()
     {
         this.moveDirSet = false;
+
+        this.tailPos.unshift([...this.headPos]);
+
         switch(this.moveDir)
         {
             case 'up':
+                this.headPos[1]--;
                 break;
             case 'down':
+                this.headPos[1]++;
                 break;
             case 'left':
+                this.headPos[0]--;
                 break;
             case 'right':
+                this.headPos[0]++;
                 break;
         }
+
+        if(this.headPos[0] != this.foodPos[0] || this.headPos[1] != this.foodPos[1])
+            this.tailPos.pop();
+
+        // fail if out of bounds
+        if(this.headPos[0] < 0 || this.headPos[0] > this.gameWidth)
+            this.stop();
+        if(this.headPos[1] < 0 || this.headPos[1] > this.gameHeight)
+            this.stop();
+        
+        // fail on head collision with tail segment(s)
+        if(this.tailPos.some(([x, y]) => this.headPos[0] === x && this.headPos[1] === y))
+            this.stop();
+        
+        this.score = this.tailPos.length + 1;
+
+        this.draw();
+
+        if(this.gameStarted)
+            setTimeout(
+                this.update.bind(this),
+                this.gameBaseSpeed / this.gameSpeed);
     }
 
     draw()
     {
+        // draw background
         this.g.fillStyle = this.borderColor;
         this.g.fillRect(
             0, 0,
             this.canvas.width, this.canvas.height
         );
 
+        // draw board background
         this.g.fillStyle = this.backgroundColor;
         this.g.fillRect(
             this.boardX, this.boardY,
             this.boardWidth, this.boardHeight
         );
 
+        // draw score
+        this.g.textBaseline = 'hanging';
+        this.g.strokeStyle = this.fontColor;
+        this.g.font = this.font;
+        this.g.strokeText(
+            `${this.score}`,
+            this.scoreBarX, this.scoreBarY
+        );
+
         if(this.gameStarted)
         {
+            // draw food
+            this.g.fillStyle = this.foodColor;
+            this.drawSquare(this.foodPos);
 
-        }else{
+            // draw player
+            this.g.fillStyle = this.playerColor;
+            this.drawSquare(this.headPos);
+
+            this.tailPos.forEach((pos) => {
+               this.drawSquare(pos);
+            });
 
         }
+    }
+
+    drawSquare(pos)
+    {
+        this.g.fillRect(
+            this.boardX + (pos[0] * this.gameSquareSize), 
+            this.boardY + (pos[1] * this.gameSquareSize),
+            this.gameSquareSize, this.gameSquareSize
+        )
     }
 
     resize()
