@@ -89,6 +89,7 @@ class Snake extends EventTarget
             Math.floor(this.gameHeight / 2)
         ];
         this.tailPos = [];
+        this.resetFoodPos();
 
         this.update();
     }
@@ -150,8 +151,11 @@ class Snake extends EventTarget
                 break;
         }
 
+        // remove lat tail segment if head doesnt land on food
         if(this.headPos[0] != this.foodPos[0] || this.headPos[1] != this.foodPos[1])
             this.tailPos.pop();
+        else
+            this.resetFoodPos();
 
         // fail if out of bounds
         if(this.headPos[0] < 0 || this.headPos[0] > this.gameWidth)
@@ -223,6 +227,21 @@ class Snake extends EventTarget
             this.boardY + (pos[1] * this.gameSquareSize),
             this.gameSquareSize, this.gameSquareSize
         )
+    }
+
+    resetFoodPos()
+    {
+        do
+        {
+            this.foodPos = [
+                Math.floor(Math.random() * this.gameWidth),
+                Math.floor(Math.random() * this.gameHeight)
+            ];
+        }
+        while(
+            (this.foodPos[0] === this.headPos[0] && 
+            this.foodPos[1] === this.headPos[1]) ||
+            this.tailPos.some(([x, y]) => this.foodPos[0] === x && this.foodPos[1] === y) )
     }
 
     resize()
