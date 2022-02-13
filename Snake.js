@@ -55,7 +55,7 @@ class Snake extends EventTarget
         this.backgroundColor = style.backgroundColor;
         this.borderColor = style.borderColor;
         this.fontSize = parseInt(style.fontSize.replace('px', '')); // remove 'px' from value and parse to int 
-        this.scoreBarHeight = this.fontSize * 2;
+        this.scoreBarHeight = this.fontSize * 1.1;
         this.font = style.fontFamily;
         
         // get user options
@@ -70,7 +70,6 @@ class Snake extends EventTarget
         window.addEventListener('resize', this.resize.bind(this));
         window.addEventListener('keydown', this.input.bind(this));
             
-        console.log(this);
         // fill canvas;
         this.draw();
     }
@@ -192,9 +191,9 @@ class Snake extends EventTarget
 
         // draw score
         this.g.textBaseline = 'hanging';
-        this.g.strokeStyle = this.fontColor;
-        this.g.font = this.font;
-        this.g.strokeText(
+        this.g.fillStyle = this.fontColor;
+        this.g.font = `${this.fontSize}px ${this.font}`;
+        this.g.fillText(
             `${this.score}`,
             this.scoreBarX, this.scoreBarY
         );
@@ -216,6 +215,7 @@ class Snake extends EventTarget
         }
     }
 
+    // draw square on game board
     drawSquare(pos)
     {
         this.g.fillRect(
@@ -258,7 +258,9 @@ class Snake extends EventTarget
 
     cleanup()
     {
-
+        this.container.removeChild(
+            this.canvas
+        );
     }
 }
 

@@ -43,8 +43,8 @@ form
     /* --- game style --- */
         background-color: #2A2A2A;
         border-color: #444444;
-        font-size: 1.5em;
-        font: inherit;
+        font-size: 2em;
+        font-family: inherit;
     /* ------------------ */
 
     position: absolute;
