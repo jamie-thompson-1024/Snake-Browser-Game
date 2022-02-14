@@ -19,6 +19,7 @@ class Snake extends EventTarget
     boardY;
     scoreBarX;
     scoreBarY;
+    backgroundRedrawInterval;
 
     // game data
     moveDir = 'up'; // 'up' | 'down' | 'left' | 'right'
@@ -64,14 +65,15 @@ class Snake extends EventTarget
 
         // get cavnas render context and update size
         this.g = this.canvas.getContext('2d');
-        this.resize();
+        this.updateRenderParams();
 
         // attach event listeners
-        window.addEventListener('resize', this.resize.bind(this));
         window.addEventListener('keydown', this.input.bind(this));
             
-        // fill canvas;
-        this.draw();
+        // start background rendering
+        this.backgroundRedrawInterval = setInterval(() => {
+            this.draw();
+        }, 200);
     }
 
     start(options)
@@ -81,7 +83,7 @@ class Snake extends EventTarget
         // get user options
         this.gameSpeed = options?.gameSpeed ?? this.gameSpeed;
         this.gameWidth = options?.gameWidth ?? this.gameWidth;
-        this.resize();
+        this.updateRenderParams();
 
         // reset game
         this.headPos = [
@@ -91,6 +93,8 @@ class Snake extends EventTarget
         this.tailPos = [];
         this.resetFoodPos();
 
+        clearInterval(this.backgroundRedrawInterval);
+
         this.update();
     }
 
@@ -98,6 +102,10 @@ class Snake extends EventTarget
     {
         this.dispatchEvent(new Event("GameOver"));
         this.gameStarted = false;
+
+        this.backgroundRedrawInterval = setInterval(() => {
+            this.draw();
+        }, 200);
     }
 
     input(ev)
@@ -179,6 +187,8 @@ class Snake extends EventTarget
 
     draw()
     {
+        this.updateRenderParams();
+
         // draw background
         this.g.fillStyle = this.borderColor;
         this.g.fillRect(
@@ -244,10 +254,14 @@ class Snake extends EventTarget
             this.tailPos.some(([x, y]) => this.foodPos[0] === x && this.foodPos[1] === y) )
     }
 
-    resize()
-    {
-        this.canvas.width = this.container.clientWidth;
-        this.canvas.height = this.container.clientHeight;
+    updateRenderParams()
+    {   
+        // resize canvas if container not equal
+        if(this.container.clientWidth != this.canvas.width)
+            this.canvas.width = this.container.clientWidth;
+
+        if(this.container.clientHeight != this.canvas.height)
+            this.canvas.height = this.container.clientHeight;
         
         // re-generate render parameters
         // square size and game height from width
