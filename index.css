@@ -40,12 +40,10 @@ form
 
 #GameBoard
 {
-    /* --- game style --- */
-        background-color: #2A2A2A;
-        border-color: #444444;
-        font-size: 2em;
-        font-family: inherit;
-    /* ------------------ */
+    display: flex;
+    flex-direction: column;
+
+    background-color: #333333;
 
     position: absolute;
 
@@ -56,6 +54,26 @@ form
     height: 100%;
 
     z-index: -1;
+}
+
+#GameContainerWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    align-self: stretch;
+    margin: 0 10px 10px 10px;
+    flex-grow: 1;
+}
+
+#GameContainer {
+    width: 99%;
+    height: 99%;
+}
+
+#livescore {
+    font-size: 1.6em;
+    margin: 5px 20px 5px 20px;
 }
 
 #GameControls
