@@ -13,13 +13,7 @@ class Snake extends EventTarget
     gameWidth = 50;
     gameHeight;
     gameSquareSize;
-    boardWidth;
-    boardHeight;
-    boardX;
-    boardY;
-    scoreBarX;
-    scoreBarY;
-    backgroundRedrawInterval;
+    backgroundRedrawHandle;
 
     // game data
     moveDir = 'up'; // 'up' | 'down' | 'left' | 'right'
@@ -33,12 +27,7 @@ class Snake extends EventTarget
     gameStarted = false;
 
     // render styles ( computer from container styles or preset )
-    backgroundColor;
-    borderColor;
-    scoreBarHeight;
-    fontSize;
-    font;
-    fontColor = '#EEEEEE';
+    backgroundColor = '#222222';
     playerColor = '#EEEEEE';
     foodColor = '#FF1111';
 
@@ -46,18 +35,12 @@ class Snake extends EventTarget
     {
         super();
 
-        // create canvas and attach to container
+        // store and style container
         this.container = container;
+
+        // create canvas and attach to container
         this.canvas = document.createElement('canvas');
         this.container.appendChild(this.canvas);
-
-        // compute render styles
-        let style = window.getComputedStyle(container);
-        this.backgroundColor = style.backgroundColor;
-        this.borderColor = style.borderColor;
-        this.fontSize = parseInt(style.fontSize.replace('px', '')); // remove 'px' from value and parse to int 
-        this.scoreBarHeight = this.fontSize * 1.1;
-        this.font = style.fontFamily;
         
         // get user options
         this.gameSpeed = options?.gameSpeed ?? this.gameSpeed;
@@ -71,7 +54,7 @@ class Snake extends EventTarget
         window.addEventListener('keydown', this.input.bind(this));
             
         // start background rendering
-        this.backgroundRedrawInterval = setInterval(() => {
+        this.backgroundRedrawHandle = setInterval(() => {
             this.draw();
         }, 200);
     }
@@ -91,9 +74,10 @@ class Snake extends EventTarget
             Math.floor(this.gameHeight / 2)
         ];
         this.tailPos = [];
+        this.score = 0;
         this.resetFoodPos();
 
-        clearInterval(this.backgroundRedrawInterval);
+        clearInterval(this.backgroundRedrawHandle);
 
         this.update();
     }
@@ -103,7 +87,7 @@ class Snake extends EventTarget
         this.dispatchEvent(new Event("GameOver"));
         this.gameStarted = false;
 
-        this.backgroundRedrawInterval = setInterval(() => {
+        this.backgroundRedrawHandle = setInterval(() => {
             this.draw();
         }, 200);
     }
@@ -175,7 +159,11 @@ class Snake extends EventTarget
         if(this.tailPos.some(([x, y]) => this.headPos[0] === x && this.headPos[1] === y))
             this.stop();
         
-        this.score = this.tailPos.length;
+        if(this.score !== this.tailPos.length)
+        {
+            this.score = this.tailPos.length;
+            this.dispatchEvent(new Event('UpdateScore'));
+        }
 
         this.draw();
 
@@ -190,26 +178,10 @@ class Snake extends EventTarget
         this.updateRenderParams();
 
         // draw background
-        this.g.fillStyle = this.borderColor;
+        this.g.fillStyle = this.backgroundColor;
         this.g.fillRect(
             0, 0,
             this.canvas.width, this.canvas.height
-        );
-
-        // draw board background
-        this.g.fillStyle = this.backgroundColor;
-        this.g.fillRect(
-            this.boardX, this.boardY,
-            this.boardWidth, this.boardHeight
-        );
-
-        // draw score
-        this.g.textBaseline = 'hanging';
-        this.g.fillStyle = this.fontColor;
-        this.g.font = `${this.fontSize}px ${this.font}`;
-        this.g.fillText(
-            `${this.score}`,
-            this.scoreBarX, this.scoreBarY
         );
 
         if(this.gameStarted)
@@ -233,8 +205,8 @@ class Snake extends EventTarget
     drawSquare(pos)
     {
         this.g.fillRect(
-            this.boardX + (pos[0] * this.gameSquareSize), 
-            this.boardY + (pos[1] * this.gameSquareSize),
+            pos[0] * this.gameSquareSize, 
+            pos[1] * this.gameSquareSize,
             this.gameSquareSize, this.gameSquareSize
         )
     }
@@ -263,29 +235,11 @@ class Snake extends EventTarget
         if(this.container.clientHeight != this.canvas.height)
             this.canvas.height = this.container.clientHeight;
         
-        // re-generate render parameters
         // square size and game height from width
         this.gameSquareSize = Math.floor(
             this.canvas.width / this.gameWidth);
         this.gameHeight = Math.floor(
-            ( this.canvas.height - this.scoreBarHeight ) / this.gameSquareSize);
-        
-        // board size from square size and grid dimentions
-        this.boardWidth = this.gameSquareSize * this.gameWidth;
-        this.boardHeight = this.gameSquareSize * this.gameHeight;
-
-        // Y margins of board + score bar
-        let boardMarginY = (
-            this.canvas.height - (this.boardHeight + this.scoreBarHeight)
-        ) / 2;
-        
-        // board position
-        this.boardX = (this.canvas.width - this.boardWidth) / 2;
-        this.boardY = boardMarginY + this.scoreBarHeight;
-
-        // score bar position
-        this.scoreBarY = boardMarginY / 2;
-        this.scoreBarX = this.boardX;
+            this.canvas.height  / this.gameSquareSize);
 
     }
 
