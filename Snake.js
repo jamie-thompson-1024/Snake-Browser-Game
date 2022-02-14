@@ -8,7 +8,7 @@ class Snake extends EventTarget
     g;
 
     // game options / render params
-    gameBaseSpeed = 500;
+    gameBaseSpeed = 350;
     gameSpeed = 1.0; 
     gameWidth = 50;
     gameHeight;
@@ -167,7 +167,7 @@ class Snake extends EventTarget
         if(this.tailPos.some(([x, y]) => this.headPos[0] === x && this.headPos[1] === y))
             this.stop();
         
-        this.score = this.tailPos.length + 1;
+        this.score = this.tailPos.length;
 
         this.draw();
 

@@ -9,13 +9,21 @@ function main()
     const optionsForm = document.getElementById('gameoptions');
     const formElements = optionsForm.elements;
 
+    const scoreElement = document.getElementById('score');
+    const highScoreElement = document.getElementById('highscore');
+
     let options = {
         gameSpeed: 1.0,
         gameWidth: 50
     };
+
+    let highScore = localStorage["snakeScore"] ?? 0;
     
     formElements.namedItem('gamespeed').value = options.gameSpeed;
     formElements.namedItem('gamewidth').value = options.gameWidth;
+
+    scoreElement.innerText = "Score: 0";
+    highScoreElement.innerText = `High Score: ${highScore}`;
     
     function startGame()
     {
@@ -30,6 +38,11 @@ function main()
 
     function gameOver()
     {
+        highScore = snake.score > highScore ? snake.score : highScore;
+        scoreElement.innerText = `Score: ${snake.score}`;
+        highScoreElement.innerText = `High Score: ${highScore}`;
+        localStorage["snakeScore"] = highScore;
+
         // show control dialog
         controlsEl.style.visibility = 'visible';
     }
